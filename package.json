@@ -1,0 +1,22 @@
+{
+  "name": "help-ticket-discord-bot",
+  "version": "1.0.0",
+  "description": "Submit, close, and reply to users' pleas for help",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Lysander",
+  "license": "ISC",
+  "dependencies": {
+    "bufferutil": "^2.0.0",
+    "discord.js": "^11.0.0",
+    "erlpack": "github:hammerandchisel/erlpack",
+    "express": "^4.14.1",
+    "node-opus": "^0.2.4",
+    "opusscript": "0.0.2",
+    "socket.io": "^1.7.2",
+    "uws": "^0.12.0",
+    "winston": "^2.3.1"
+  }
+}
