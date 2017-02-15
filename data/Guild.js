@@ -32,7 +32,7 @@ var Guild = function(guild, guildPath) {
 		"tickets": guild["tickets"],
 		ticketFilter: guild["tickets"].reduce(function(filter, ticket, index) {
 			filter[ticket["id"]] = index;
-		}, {});,
+		}, {}),
 		
 		// A mapping of messages to ticket numbers so that messages can be quickly located for editing
 		"messages": guild["messages"],

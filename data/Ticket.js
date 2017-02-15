@@ -35,7 +35,7 @@ var Ticket = function(data, ticketPath, messagePath) {
 				"created-by": author,
 				"created-on": timestamp,
 				"history": [{
-					"content": content
+					"content": content,
 					"timestamp": timestamp
 				}]
 			});
@@ -52,7 +52,7 @@ var Ticket = function(data, ticketPath, messagePath) {
 		// Close this ticket
 		close: function(content, timestamp) {
 			// Mark ticket as closed
-			this["close-timestamp"] = timestamp,
+			this["close-timestamp"] = timestamp;
 			
 			return [this.dump(), this.reply(content, timestamp)];
 		},

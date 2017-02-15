@@ -188,7 +188,7 @@ module.exports.TicketCache = {
 		// Process all Guilds
 		Promise.all(Object.entries(this.data).map(function(guild, index, guilds) {
 			return guild[1].dump();
-		}).then(function(results) {
+		})).then(function(results) {
 			results.forEach(function(result, index, results) {
 				this.log('info', 'Saved information for Guild: ' + result);
 			}, module.exports.TicketCacheLogger);
