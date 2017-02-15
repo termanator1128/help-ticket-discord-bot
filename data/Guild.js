@@ -1,41 +1,77 @@
 var fs = require('fs');
 var Ticket = require('./Ticket.js');
 
+var util = require('./util.js');
 
-/* Where the Guild will be stored
+
+/* Path information
  */
 module.exports.guildRoot = './guilds/';
-module.exports.guildInfo = '/info.json';
+module.exports.guildInfo = 'info.json';
+module.exports.ticketRoot = 'tickets/';
 
 
 /* Extract and store relevant information about a Discord Guild
  */
-module.exports.Guild = function(guild) {
-	// Rebuild ticket objects
-	var tickets = undefined;
-	if (guild["tickets"])
-		tickets = guild["tickets"].map(function(elem) {
-			return [elem, Ticket(require('./tickets/' + elem + '/info.json'))];
-		});
-	
-	// Output a guild object
+// Constructor for a Guild object
+var Guild = function(guild, guildPath) {
 	return {
-		"id": guild.id || guild["id"],
-		"name": guild.name || guild["name"],
+		"id": guild["id"],
+		"name": guild["name"],
 		"roles": {
-			"admin": guild["roles"]["admin"] || "Bot Commander",
-			"helper": guild["roles"]["helper"] || "Assistant",
+			"admin": guild["roles"]["admin"],
+			"helper": guild["roles"]["helper"]
 		},
 		"channels": {
-			"help-text": guild["help-text"] || "help-tickets",
-			"help-voice": guild["help-voice"] || "Help Tickets"
+			"help-text": guild["help-text"],
+			"help-voice": guild["help-voice"]
 		},
 		
+		"ticket-count": util.stringToHex(guild["ticket-count"]),
 		// A queue of tickets to be handled, stored in the form [number, Ticket]
-		"tickets": tickets || [],
+		"tickets": guild["tickets"],
+		ticketFilter: guild["tickets"].reduce(function(filter, ticket, index) {
+			filter[ticket["id"]] = index;
+		}, {});,
 		
 		// A mapping of messages to ticket numbers so that messages can be quickly located for editing
-		"messages": guild["messages"] || {},
+		"messages": guild["messages"],
+		
+		
+		/* Retrieving information
+		 */
+		// Reconstruct the key for this Guild
+		getKey: function() {
+			return '[' + this["id"] + '] ' + this["name"];
+		},
+		
+		// Get a Ticket given a message
+		getTicket: function(message) {
+			if (this["tickets"].length == 0)
+				return undefined;
+			
+			// If there is a Ticket number specified, it will be the second word of the message
+			var secondWordStart = message.content.indexOf(' ');
+			
+			// Cannot find Ticket number because there's only 1 word
+			if (secondWordStart == -1)
+				return this["tickets"][0];
+			secondWordStart += 1;
+			
+			// See if there is a second word of valid length
+			var secondWordEnd = message.content.indexOf(' ', secondWordStart);
+			if (secondWordEnd <= secondWordStart)
+				return this["tickets"][0];
+			
+			// If a valid (hexadecimal) Ticket number is given, use it to look up the Ticket
+			var ticketNumber = message.content.substring(secondWordStart, secondWordEnd);
+			if (!util.stringToHex(ticketNumber))
+				return this["tickets"][0];
+			else if (!this.ticketFilter.hasOwnProperty(ticketNumber))
+				return undefined;
+			else
+				return this["tickets"][this.ticketFilter(ticketNumber)];
+		},
 		
 		
 		/* Role and channel management
@@ -97,45 +133,68 @@ module.exports.Guild = function(guild) {
 		 */
 		// Open a ticket
 		openTicket: function(message) {
+			var newTicket = Ticket.openTicket(util.toHexString(++this["ticket-count"]), message, guildPath);
 			
-			// Enqueue the ticket
+			// Enqueue the ticket and do an initial dump
+			this[newTicket["id"]] = this["tickets"].length;
+			this["tickets"].push(newTicket);
+			return newTicket.dump();
 		},
 		
 		// Respond to a ticket
 		respondTicket: function(message) {
-			var ticketNumber = undefined;
+			// Check if there is a valid ticket to respond to
+			var ticket = this.getTicket(message);
+			if (!ticket)
+				return {
+					err: 'Ticket not found'
+				};
 			
 			// Make an entry in the message mapping
-			this["messages"][message.createdTimestamp] = ticketNumber;
+			this["messages"][message.createdTimestamp] = ticket["id"];
+			
+			// Record message
+			return ticket.respond(message.author.username, message.content, message.timestamp);
+		},
+		
+		// Edit a response to a ticket
+		editTicketResponse: function(message) {
+			if (!this["messages"].hasOwnProperty(message.createdTimestamp))
+				return {
+					err: 'Message not associated with any Ticket'
+				};
+			
+			// Look up the ticket number through the message's timestamp
+			var ticketNumber = this["messages"][message.createdTimestamp],
+				ticket = this["tickets"][this.ticketFilter[ticketNumber]];
+			
+			// Record edited messsage
+			return ticket.editResponse(message.content, message.createTimestamp, message.editedTimestamp);
 		},
 		
 		// Close a ticket
 		closeTicket: function(message) {
+			// Check if there is a valid ticket to close
+			var ticket = this.getTicket(message);
+			if (!ticket)
+				return {
+					err: 'Ticket not found'
+				};
 			
-			// Dequeue the ticket
-		},
-		
-		
-		/* Notifications
-		 */
-		// Generate a notification whenever a ticket gets closed
-		notifyClosedTicket: function(message, Ticket) {
-			
+			// Dequeue and close the ticket
+			this["tickets"].splice(this.ticketFilter[ticket["id"]], 1);
+			delete this.ticketFilter[ticket["id"]];
+			return ticket.close(message.content, message.timestamp);
 		},
 		
 		
 		/* Saving information
 		 */
-		// Reconstruct the key for this Guild
-		getKey: function() {
-			return '[' + this["id"] + '] ' + this["name"];
-		},
-		
 		// Extract writeable data as JSON, outputting a Promise that will write the file when invoked
 		dump: function(dirName) {
 			// Convert Ticket queue to a writeable form
-			var tickets = this["tickets"].map(function(elem) {
-					return elem[0];
+			var tickets = this["tickets"].map(function(ticket, index, tickets) {
+					return ticket["id"];
 				}),
 				directory = module.exports.guildRoot + (dirName || this.getKey()),
 				file = directory + module.exports.guildInfo;
@@ -151,20 +210,50 @@ module.exports.Guild = function(guild) {
 					"name": this["name"],
 					"roles": this["roles"],
 					"channels": this["channels"],
+					"ticket-count": util.toHexString(this["ticket-count"]),
 					"tickets": tickets,
 					"messages": this["messages"]
-				}, function(err) {
-					if (err)
-						reject({
-							operation: "Guild.dump()",
-							message: err,
-							path: ticketPath
-						});
-					
-					// On success, provide the name of the file that was written
-					resolve(file);
-				});
+				}), util.writeFileCallback("Guild.dump()", ticketPath, resolve, reject));
 			});
 		}
 	};
+};
+
+// Create a Guild from Discord.js Guild information
+module.exports.addGuild = function(key, guild) {
+	// Create a folder for this guild and its information if it does not yet exist
+	var guildPath = module.exports.guildRoot + key;
+	if (!fs.existsSync(guildPath))
+		fs.mkdirSync(guildPath);
+	guildPath += '/';
+	
+	return Guild({
+		"id": guild.id,
+		"name": guild.name,
+		"roles": {
+			"admin": "Bot Commander",
+			"helper": "Assistant"
+		},
+		"channels": {
+			"help-text": "help-tickets",
+			"help-voice": "Help Tickets"
+		},
+		"ticket-count": "0",
+		"tickets": [],
+		"messages": {},
+	}, guildPath);
+};
+
+// Load a Guild from file
+module.exports.loadGuild = function(pathToGuildFile) {
+	var data = require(pathToGuildFile),
+		// Strip out the info file to get the path to this Guild
+		guildPath = pathToGuildFile.substring(pathToGuildFile.indexOf(module.exports.guildInfo));
+	
+	// Rebuild ticket objects
+	data["tickets"] = data["tickets"].map(function(ticketNumber, index, ticketNumbers) {
+		return Ticket.loadTicket(guildPath + module.exports.ticketRoot + Ticket.ticketFile);
+	});
+	
+	return Guild(data, guildPath);
 };

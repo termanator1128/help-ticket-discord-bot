@@ -21,12 +21,13 @@ module.exports.TicketCacheLogger = {
 };
 
 
-/* Tools and utilities
+/* Path information
  */
-module.exports.toHex = function(h) {
-	let val = parseInt(h, 16);
-	return (val.toString(16) === h ? val : undefined);
-};
+// Directory inside which all Guild information will be stored
+module.exports.guildRoot = './guilds/';
+
+// File inside which a single Guild's information will be stored
+module.exports.guildInfoFile = 'guildInfo.json';
 
 
 /* Store and access Guild and Ticket data
@@ -34,19 +35,6 @@ module.exports.toHex = function(h) {
 module.exports.TicketCache = {
 	// Information for all the guilds that this bot is a part of as well as all the tickets ever made on that guild
 	data: {},
-	
-	// Directory inside which all Guild information will be stored
-	guildRoot: './guilds/',
-	
-	// File inside which a single Guild's information will be stored
-	guildInfoFile: 'guildInfo.json',
-	
-	// Directory inside which ticket information will be stored
-	// ticketRoot: '/tickets/', // Cannot be changed
-	// ticketInfoFile: 'info.json', // Cannot be changed
-	
-	// Directory inside which messages associated with tickets will be stored
-	// messageRoot: '/messages/, // Cannot be changed
 	
 	
 	/* Retrieve Guild data and store it in the cache
@@ -57,18 +45,19 @@ module.exports.TicketCache = {
 	 */
 	// Generate a new Guild from Discord.js Guild data
 	insert: function(guild) {
-		data[this.getKey(guild)] = Guild(guild);
+		var key = this.getKey(guild);
+		data[key] = Guild.addGuild(key, guild);
 	},
 	
 	// Retrieve previously populated Guild data from a file
 	populate: function(directory) {
-		data[directory] = Guild(require(this.guildRoot + directory + '/' + this.guildInfoFile));
+		data[directory] = Guild.loadGuild(module.exports.guildRoot + directory + '/' + module.exports.guildInfoFile);
 	},
 	
 	// Retrieve all Guilds inside a directory
 	populateAll: function() {
-		var guilds = fs.readdirSync(this.guildRoot).filter(function(file, index, results) {
-				return fs.statSync(path.join(this.guildRoot, file)).isDirectory() && this.isKey(file);
+		var guilds = fs.readdirSync(module.exports.guildRoot).filter(function(file, index, results) {
+				return fs.statSync(path.join(module.exports.guildRoot, file)).isDirectory() && this.isKey(file);
 			}, this);
 		
 		guilds.forEach(function(guild, index, guilds) {
@@ -105,107 +94,108 @@ module.exports.TicketCache = {
 	 * 		If a help ticket channel exists in the guild, the bot will log information to that channel
 	 */
 	// Open a ticket
-	openTicket: function(message) {
-		this.data[this.getKey(message.guild)].openTicket(message);
+	openTicket: function(botClient, message) {
+		var openTicket = this.data[this.getKey(message.guild)].openTicket(message);
+		
+		if (openTicket.err)
+			module.exports.TicketCacheLogger('error', 'Failed to open Ticket', openTicket.err);
+		else
+			openTicket.then(function(result) {
+				module.exports.TicketCacheLogger.log('info', 'New ticket opened: ' + result);
+			}, function(err) {
+				module.exports.TicketCacheLogger.log('error', 'Failed to open ticket', error);
+			});
 	},
 	
 	// Respond to a ticket
 	respondTicket: function(message) {
-		this.data[this.getKey(message.guild)].respondTicket(message);
+		var respondTicket = this.data[this.getKey(message.guild)].respondTicket(message)
+		
+		if (respondTicket.err)
+			module.exports.TicketCacheLogger('error', 'Failed to respond to Ticket', respondTicket.err);
+		else
+			respondTicket.then(function(result) {
+				module.exports.TicketCacheLogger.log('info', 'Responded to Ticket: ' + result);
+			}, function(error) {
+				module.exports.TicketCacheLogger.log('error', 'Failed to respond to Ticket', error);
+			});
+	},
+	
+	// Edit a response to a ticket
+	editTicketResponse: function(message) {
+		var editTicketResponse = this.data[this.getKey(message.guild)].editTicketResponse(message);
+		
+		if (editTicketResponse.err)
+			module.exports.TicketCacheLogger('error', 'Failed to edit response to Ticket', editTicketResponse.err);
+		else
+			editTicketResponse.then(function(result) {
+				module.exports.TicketCacheLogger.log('info', 'Edited a response to a Ticket: ' + result);
+			}, function(error) {
+				module.exports.TicketCacheLogger('error', 'Failed to edit response to Ticket', error);
+			});
 	},
 	
 	// Close a ticket
-	closeTicket: function(message) {
-		this.data[this.getKey(message.guild)].closeTicket(message);
+	closeTicket: function(botClient, message) {
+		var key = this.getKey(message.guild),
+			guild = this.data[key],
+			closeTicket = guild.closeTicket(message);
+		
+		if (closeTicket.err)
+			module.exports.TicketCacheLogger('error', 'Failed to close Ticket', closeTicket.err);
+		else
+			Promise.all(closeTicket).then(function(results) {
+				module.exports.TicketCacheLogger.log('info', 'Ticket at ' + results[0] + ' has been closed. Closing message written to ' + results[1]);
+			}, function(errors) {
+				errors.forEach(function(error, index, errors) {
+					this.log('error', 'Failed to close Ticket', error);
+				}, module.exports.TicketCacheLogger);
+			});
+	},
+	
+	
+	/* Notifications
+	 * 
+	 * Notify the help text channel whenever something important happens (a ticket is opened/closed)
+	 */
+	// Notify a specific user
+	notifyUser: function(botClient, message, notification, username) {
+		let admin = message.server.members.get('name', username);
+		if (admin)
+			botClient.sendMessage(message, `${admin} ${notification}`);
+		else
+			module.exports.TicketCacheLogger.log('error', 'Failed to notify ' + username + ': ' + notification);
+	},
+	
+	// Notify a role
+	notifyRole: function(botClient, message, notification, roleName) {
+		let role = message.server.roles.get('name', roleName);
+		if (admin)
+			botClient.sendMessage(message, `${role} ${notification}`);
+		else
+			module.exports.TicketCacheLogger.log('error', 'Failed to notify ' + username + ': ' + notification);
 	},
 	
 	
 	/* Cleaning up
 	 */
-	// Extract tickets from a Guild and output them in array format
-	unpackTickets: function(guildKey) {
-		return this.data[guildKey]["tickets"];
-	},
-	
 	// Save all Guild information (call this when the bot shuts down)
 	dump: function() {
 		// Create root directory
-		if (!fs.existsSync(this.guildRoot))
-			fs.mkdirSync(this.guildRoot);
+		if (!fs.existsSync(module.exports.guildRoot))
+			fs.mkdirSync(module.exports.guildRoot);
 		
 		// Process all Guilds
-		Promise.all(
-			this.data.entries()
-			.map(function(guildInfo, index, guilds) {
-				// Unpack entry
-				var key = guildInfo[0],
-					guild = guildInfo[1];
-				
-				// Build destination path and get tickets
-				var guildPath = this.guildRoot + key + '/',
-					guildFile = guildPath + this.guildInfoFile,
-					tickets = this.unpackTickets(guild);
-				
-				// Generate Promise
-				return new Promise(function(resolve, reject) {
-					// Write each guild to file
-					fs.writeFile(guildFile, guild.dump(), function(err) {
-						if (err)
-							reject({
-								operation: "writeFile",
-								message: err,
-								path: guildPath
-							});
-						
-						// Output the [Tickets, path] pair for further processing
-						resolve([tickets, guildPath]);
-					});
-				});
-			}, this)
-		).then(function(guilds) {
-			// For each Guild, process all Tickets
-			Promise.all(
-				guilds.reduce(function(tickets, guildTicketInfo, index) {
-					// Unpack entry
-					var ticketInfo = guildTicketInfo[0],
-						guildPath = guildTicketInfo[1],
-						ticketPath = guildPath + '/tickets/';
-					
-					// Flatten Ticket array while generating new Promises
-					return tickets.concat(ticketInfo.map(function(ticket, index, ticketInfo) {
-						return new Promise(function(resolve, reject) {
-							var ticketFile = ticketPath + ticket["id"] + '/info.json';
-							
-							// Write each ticket to file
-							fs.writeFile(ticketPath, ticket.dump(), function(err) {
-								if (err)
-									reject({
-										operation: "writeFile",
-										message: err,
-										path: ticketPath
-									});
-								
-								resolve(file);
-							});
-						});
-					}, ticketPath));
-				}, [])
-			).then(function(results) {
-				// Log results
-				results.forEach(function(result, index, results) {
-					module.exports.TicketCacheLogger.log('info', result + ' written successfully');
-				});
-			}, function(errors) {
-				// Log errors
-				errors.forEach(function(err, index, errors) {
-					module.exports.TicketCacheLogger.log('error', "An error has occurred while writing Ticket information", err);
-				});
-			});
+		Promise.all(Object.entries(this.data).map(function(guild, index, guilds) {
+			return guild[1].dump();
+		}).then(function(results) {
+			results.forEach(function(result, index, results) {
+				this.log('info', 'Saved information for Guild: ' + result);
+			}, module.exports.TicketCacheLogger);
 		}, function(errors) {
-			// Log error
-			errors.forEach(function(err, index, errors) {
-				module.exports.TicketCacheLogger.log('error', "An error has occurred while writing Guild information", err);
-			});
+			errors.forEach(function(error, index, errors) {
+				this.log('error', 'Error saving Guild information', error);
+			}, module.exports.TicketCacheLogger);
 		});
 	}
 };
