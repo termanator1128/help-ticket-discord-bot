@@ -58,7 +58,10 @@ var tc = require('./data/TicketCache.js'),
 
 // Bot is ready for action
 bot.on('ready', function(event) {
+	var inviteLink = require('./invite/invite.js').invite(Config["discord"]["client"]["id"], Config["defaults"]["permissions"]);
+	
 	logger.log('info', 'Logged in as %s - %s\n', bot.user.username, bot.user.id);
+	console.log(`Invite this bot to your server: ${inviteLink}`);
 	
 	// Load all guild and active ticket information
 	TicketCache.populateAll();
