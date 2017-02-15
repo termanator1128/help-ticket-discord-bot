@@ -24,7 +24,7 @@ module.exports.TicketCacheLogger = {
 /* Path information
  */
 // Directory inside which all Guild information will be stored
-module.exports.guildRoot = './guilds/';
+module.exports.guildRoot = './data/guilds/';
 
 // File inside which a single Guild's information will be stored
 module.exports.guildInfoFile = 'guildInfo.json';
