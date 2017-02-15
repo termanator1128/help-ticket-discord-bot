@@ -53,13 +53,15 @@ var Discord = require('discord.js');
 var bot = new Discord.Client();
 
 // Hash map for active tickets ({[guild.id] guild.name => {data => guild data, ticket number => ticket object}})
-var TicketCache = require('./data/TicketCache.js').TicketCache;
+var tc = require('./data/TicketCache.js'),
+	TicketCache = tc.TicketCache;
 
 // Bot is ready for action
 bot.on('ready', function(event) {
 	logger.log('info', 'Logged in as %s - %s\n', bot.user.username, bot.user.id);
 	
 	// Load all guild and active ticket information
+	TicketCache.populateAll();
 });
 
 // Bot has joined a guild
@@ -70,47 +72,62 @@ bot.on('guildCreate', function(guild) {
 // Process commands and route them to the correct module
 bot.on('message', function(message) {
 	// Parse out the command in the message
-	var command = message.substring(0, message.indexof(' ')),
-		key = TicketCache.hash(message.guild);
+	var commandEnd = message.indexof(' '),
+		command = message.substring(0, (commandEnd > 0 ? commandEnd : message.length)),
+		key = TicketCache.getKey(message.guild);
 	
 	switch (command) {
 		/* Bot settings
 		 */
-		case '~setHelpTextChannel':
-			// Register a text channel as a "help" channel
-			
-			break;
-		
-		case '~setHelpVoiceChannel':
-			// Register a voice channel as a "help" channel
-			break;
-		
 		case '~setAdmin':
 			// Register a role as having admin privileges (only one role may have admin privileges)
-			TicketCache[key].setAdmin(message);
+			TicketCache.getGuild(key).setAdmin(message);
 			break;
 		
 		case '~setHelper':
 			// Register a role as the group that help requests will be directed towards (only one role may be a responder)
-			TicketCache[key].setHelper(message);
+			TicketCache.getGuild(key).setHelper(message);
 			break;
+		
+		case '~setHelpTextChannel':
+			// Register a text channel as a "help" channel
+			TicketCache.getGuild(key).setHelpTextChannel(message);
+			break;
+		
+		case '~setHelpVoiceChannel':
+			// Register a voice channel as a "help" channel
+			TicketCache.getGuild(key).setHelpVoiceChannel(message);
+			break;
+		
+		
+		/* Information about this bot
+		 */
+		case '^help':
+			// Print a list of commands
+			break;
+		
 		
 		/* Handle help tickets
 		 */
 		case '!open':
 			// Create a new ticket and assign it a number
-			TicketCache.addTicket(message.guild, message);
+			TicketCache.openTicket(bot, message);
 			break;
 		
 		case '!reply':
 			// Respond to an existing ticket by id
-			TicketCache.replyTicket(message.guild, message);
+			TicketCache.respondTicket(bot, message);
 			break;
 		
 		case '!close':
-			TicketCache.closeTicket(message.guild, message);
+			TicketCache.closeTicket(bot, message);
 			break;
 	}
+});
+
+// Detect changes in existing messages
+bot.on('messageUpdate', function(oldMessage, newMessage) {
+	TicketCache.respondTicket(bot, newMessage);
 });
 
 // Disconnect notifier
@@ -118,6 +135,7 @@ bot.on('disconnect', function(errMsg, code) {
 	logger.log('info', '%s - %s has has logged off\n', bot.user.username, bot.user.id);
 	
 	// Dump all data to cache
+	TicketCache.dump();
 });
 
 // Connect using the token

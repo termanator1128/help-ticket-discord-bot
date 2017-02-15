@@ -1,0 +1,45 @@
+{
+	"discord": {
+		"bot-user": {
+			"username": "BOT_USERNAME#NNNN",
+			"token": "BOT_ACCESS_TOKEN"
+		},
+		"client": {
+			"id": "CLIENT_ID",
+			"secret": "CLIENT_SECRET"
+		}
+	},
+	"defaults": {
+		"permissions": ["READ_MESSAGES", "SEND_MESSAGES", "SEND_TTS_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY", "MENTION_EVERYONE", "MOVE_MEMBERS", "CHANGE_NICKNAME"],
+		"channels": {
+			"help-text": "",
+			"help-voice": ""
+		},
+		"logs": {
+			"info": {
+				"name": "info-file",
+				"filename": "./logs/filelog-info.log"
+			},
+			"error": {
+				"name": "error-file",
+				"filename": "./logs/filelog-error.log"
+			}
+		},
+		"commands": {
+			"settings": {
+				"~setAdmin": "Set an existing Role as an administrator for this bot",
+				"~setHelper": "Set an existing Role as a Ticket responder",
+				"~setHelpTextChannel": "Set an existing text channel as a place to resolve Tickets",
+				"~setHelpVoiceChannel": "Set an existing voice channel as a place to resolve Tickets"
+			},
+			"information": {
+				"^help": "Print out a list of commands that this bot can handle"
+			},
+			"help-tickets": {
+				"!open": "Open a new Ticket",
+				"!reply": "Reply to an open Ticket",
+				"!close": "Close an open Ticket"
+			}
+		}
+	}
+}
