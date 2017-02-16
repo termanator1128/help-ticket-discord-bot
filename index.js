@@ -75,7 +75,7 @@ bot.on('guildCreate', function(guild) {
 // Process commands and route them to the correct module
 bot.on('message', function(message) {
 	// Parse out the command in the message
-	var commandEnd = message.content.indexof(' '),
+	var commandEnd = message.content.indexOf(' '),
 		command = message.content.substring(0, (commandEnd > 0 ? commandEnd : message.length)),
 		key = TicketCache.getKey(message.guild);
 	
