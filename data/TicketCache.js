@@ -51,7 +51,7 @@ module.exports.TicketCache = {
 	
 	// Retrieve previously populated Guild data from a file
 	populate: function(directory) {
-		data[directory] = Guild.loadGuild(module.exports.guildRoot + directory + '/' + module.exports.guildInfoFile);
+		this.data[directory] = Guild.loadGuild(module.exports.guildRoot + directory + '/' + module.exports.guildInfoFile);
 	},
 	
 	// Retrieve all Guilds inside a directory
