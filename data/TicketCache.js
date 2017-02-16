@@ -46,7 +46,7 @@ module.exports.TicketCache = {
 	// Generate a new Guild from Discord.js Guild data
 	insert: function(guild) {
 		var key = this.getKey(guild);
-		data[key] = Guild.addGuild(key, guild);
+		this.data[key] = Guild.addGuild(key, guild);
 	},
 	
 	// Retrieve previously populated Guild data from a file
