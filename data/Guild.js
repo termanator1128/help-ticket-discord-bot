@@ -6,7 +6,7 @@ var util = require('./util.js');
 
 /* Path information
  */
-module.exports.guildRoot = './guilds/';
+module.exports.guildRoot = './data/guilds/';
 module.exports.guildInfo = 'info.json';
 module.exports.ticketRoot = 'tickets/';
 
@@ -191,12 +191,12 @@ var Guild = function(guild, guildPath) {
 		/* Saving information
 		 */
 		// Extract writeable data as JSON, outputting a Promise that will write the file when invoked
-		dump: function(dirName) {
+		dump: function() {
 			// Convert Ticket queue to a writeable form
 			var tickets = this["tickets"].map(function(ticket, index, tickets) {
 					return ticket["id"];
 				}),
-				directory = module.exports.guildRoot + (dirName || this.getKey()),
+				directory = module.exports.guildRoot + this.getKey(),
 				file = directory + module.exports.guildInfo;
 			
 			// Create directory if it doesn't exists

@@ -47,6 +47,13 @@ module.exports.TicketCache = {
 	insert: function(guild) {
 		var key = this.getKey(guild);
 		this.data[key] = Guild.addGuild(key, guild);
+		
+		// Do a preliminary dump
+		this.data[key].dump().then(function(result) {
+			module.exports.TicketCacheLogger.log('info', 'Saved information for Guild: ' + result);
+		}, function(error) {
+			module.exports.TicketCacheLogger.log('error', 'Error saving Guild information', error);
+		});
 	},
 	
 	// Retrieve previously populated Guild data from a file
