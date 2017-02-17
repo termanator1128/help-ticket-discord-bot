@@ -102,7 +102,7 @@ module.exports.openTicket = function(number, message, guildPath) {
 
 // Load a Ticket from a file
 module.exports.loadTicket = function(filename) {
-	var data = require(filename),
+	var data = require(path.resolve(filename)),
 		// Unpack path information from filename
 		ticketPath = filename.substring(0, filename.indexOf(module.exports.ticketFile)),
 		messagePath = ticketPath + module.exports.messageRoot;

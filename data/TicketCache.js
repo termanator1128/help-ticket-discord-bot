@@ -21,15 +21,6 @@ module.exports.TicketCacheLogger = {
 };
 
 
-/* Path information
- */
-// Directory inside which all Guild information will be stored
-module.exports.guildRoot = './data/guilds/';
-
-// File inside which a single Guild's information will be stored
-module.exports.guildInfoFile = 'guildInfo.json';
-
-
 /* Store and access Guild and Ticket data
  */
 module.exports.TicketCache = {
@@ -48,23 +39,27 @@ module.exports.TicketCache = {
 		var key = this.getKey(guild);
 		this.data[key] = Guild.addGuild(key, guild);
 		
+		console.log(`inserted ${key}: ${guild.id}`);
+		
 		// Do a preliminary dump
 		this.data[key].dump().then(function(result) {
 			module.exports.TicketCacheLogger.log('info', 'Saved information for Guild: ' + result);
+			console.log(`saved ${result}`);
 		}, function(error) {
 			module.exports.TicketCacheLogger.log('error', 'Error saving Guild information', error);
+			console.log(error);
 		});
 	},
 	
 	// Retrieve previously populated Guild data from a file
 	populate: function(directory) {
-		this.data[directory] = Guild.loadGuild(module.exports.guildRoot + directory + '/' + module.exports.guildInfoFile);
+		this.data[directory] = Guild.loadGuild(Guild.guildRoot + directory + '/' + Guild.guildInfo);
 	},
 	
 	// Retrieve all Guilds inside a directory
 	populateAll: function() {
-		var guilds = fs.readdirSync(module.exports.guildRoot).filter(function(file, index, results) {
-				return fs.statSync(path.join(module.exports.guildRoot, file)).isDirectory() && this.isKey(file);
+		var guilds = fs.readdirSync(Guild.guildRoot).filter(function(file, index, results) {
+				return fs.statSync(path.join(Guild.guildRoot, file)).isDirectory() && this.isKey(file);
 			}, this);
 		
 		guilds.forEach(function(guild, index, guilds) {

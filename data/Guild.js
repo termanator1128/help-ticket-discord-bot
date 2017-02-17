@@ -1,4 +1,5 @@
-var fs = require('fs');
+var fs = require('fs'),
+	path = require('path');
 var Ticket = require('./Ticket.js');
 
 var util = require('./util.js');
@@ -196,16 +197,7 @@ var Guild = function(guild, guildPath) {
 			var tickets = this["tickets"].map(function(ticket, index, tickets) {
 					return ticket["id"];
 				}),
-				directory = module.exports.guildRoot + this.getKey(),
-				file = directory + module.exports.guildInfo;
-			
-			// Create directory if it doesn't exists
-			if (!fs.existsSync(directory))
-				fs.mkdirSync(directory);
-			
-			// Create a Promise that will be used externally
-			return new Promise(function(resolve, reject) {
-				fs.writeFile(file, JSON.stringify({
+				data = JSON.stringify({
 					"id": this["id"],
 					"name": this["name"],
 					"roles": this["roles"],
@@ -213,7 +205,16 @@ var Guild = function(guild, guildPath) {
 					"ticket-count": util.toHexString(this["ticket-count"]),
 					"tickets": tickets,
 					"messages": this["messages"]
-				}), util.writeFileCallback("Guild.dump()", ticketPath, resolve, reject));
+				}),
+				file = guildPath + module.exports.guildInfo;
+			
+			// Create directory if it doesn't exist
+			if (!fs.existsSync(guildPath))
+				fs.mkdirSync(guildPath);
+			
+			// Create a Promise that will be used externally
+			return new Promise(function(resolve, reject) {
+				fs.writeFile(file, data, util.writeFileCallback("Guild.dump()", guildPath, resolve, reject));
 			});
 		}
 	};
@@ -246,13 +247,13 @@ module.exports.addGuild = function(key, guild) {
 
 // Load a Guild from file
 module.exports.loadGuild = function(pathToGuildFile) {
-	var data = require(pathToGuildFile),
+	var data = require(path.resolve(pathToGuildFile)),
 		// Strip out the info file to get the path to this Guild
 		guildPath = pathToGuildFile.substring(pathToGuildFile.indexOf(module.exports.guildInfo));
 	
 	// Rebuild ticket objects
 	data["tickets"] = data["tickets"].map(function(ticketNumber, index, ticketNumbers) {
-		return Ticket.loadTicket(guildPath + module.exports.ticketRoot + Ticket.ticketFile);
+		return Ticket.loadTicket(guildPath + module.exports.ticketRoot + ticketNumber + '/' + Ticket.ticketFile);
 	});
 	
 	return Guild(data, guildPath);
