@@ -167,9 +167,9 @@ module.exports.TicketCache = {
 	 */
 	// Notify a specific user
 	notifyUser: function(botClient, message, notification, username) {
-		let admin = message.server.members.get('name', username);
-		if (admin)
-			botClient.sendMessage(message, `${admin} ${notification}`);
+		let user = message.server.members.get('name', username);
+		if (user)
+			botClient.sendMessage(message, `${user} ${notification}`);
 		else
 			module.exports.TicketCacheLogger.log('error', 'Failed to notify ' + username + ': ' + notification);
 	},
@@ -177,7 +177,7 @@ module.exports.TicketCache = {
 	// Notify a role
 	notifyRole: function(botClient, message, notification, roleName) {
 		let role = message.server.roles.get('name', roleName);
-		if (admin)
+		if (role)
 			botClient.sendMessage(message, `${role} ${notification}`);
 		else
 			module.exports.TicketCacheLogger.log('error', 'Failed to notify ' + username + ': ' + notification);
