@@ -24,8 +24,8 @@ var Guild = function(guild, guildPath) {
 			"helper": guild["roles"]["helper"]
 		},
 		"channels": {
-			"help-text": guild["help-text"],
-			"help-voice": guild["help-voice"]
+			"help-text": guild["channels"]["help-text"],
+			"help-voice": guild["channels"]["help-voice"]
 		},
 		
 		"ticket-count": util.stringToHex(guild["ticket-count"]),
