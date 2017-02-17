@@ -130,7 +130,7 @@ bot.on('message', function(message) {
 
 // Detect changes in existing messages
 bot.on('messageUpdate', function(oldMessage, newMessage) {
-	TicketCache.respondTicket(bot, newMessage);
+	TicketCache.editTicketResponse(newMessage);
 });
 
 // Disconnect notifier
