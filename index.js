@@ -56,6 +56,8 @@ var bot = new Discord.Client();
 var tc = require('./data/TicketCache.js'),
 	TicketCache = tc.TicketCache;
 
+tc.TicketCacheLogger.setLogger(logger);
+
 // Bot is ready for action
 bot.on('ready', function(event) {
 	var inviteLink = require('./invite/invite.js').invite(Config["discord"]["client"]["id"], Config["defaults"]["permissions"]);
@@ -115,6 +117,9 @@ bot.on('message', function(message) {
 		case '!open':
 			// Create a new ticket and assign it a number
 			TicketCache.openTicket(bot, message);
+			
+			// Post the opening message as the initial reply
+			TicketCache.respondTicket(bot, message);
 			break;
 		
 		case '!reply':
