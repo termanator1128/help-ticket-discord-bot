@@ -6,6 +6,7 @@ var util = require('./util.js');
 
 /* Path information
  */
+module.exports.ticketRoot = 'tickets/';
 module.exports.ticketFile = 'info.json';
 module.exports.messageRoot = 'messages/';
 
@@ -73,7 +74,7 @@ var Ticket = function(data, ticketPath, messagePath) {
 				ticketFile = ticketPath + module.exports.ticketFile;
 			
 			return new Promise(function(resolve, reject) {
-				fs.writeFile(ticketFile, JSON.stringify(data), util.writeFileCallBack("Write Ticket", ticketFile));
+				fs.writeFile(ticketFile, JSON.stringify(data), util.writeFileCallback("Write Ticket", ticketFile, resolve, reject));
 			});
 		}
 	}
@@ -115,10 +116,10 @@ module.exports.loadTicket = function(filename) {
  */
 // Create a Promise for writing a Message
 module.exports.Message = function(messagePath, data) {
-	var file = messagePath + data["timestamp"] + ".json";
+	var file = messagePath + data["created-on"] + ".json";
 	
 	return new Promise(function(resolve, reject) {
-		fs.writeFile(file, JSON.stringify(data), util.writeFileCallBack("Write message", messagePath, resolve, reject));
+		fs.writeFile(file, JSON.stringify(data), util.writeFileCallback("Write message", messagePath, resolve, reject));
 	});
 };
 
@@ -132,6 +133,6 @@ module.exports.editMessage = function(messagePath, editInfo) {
 	
 	// Write back to the file
 	return new Promise(function(resolve, reject) {
-		fs.writeFile(messagePath, JSON.stringify(message), util.writeFileCallBack("Edit message", messagePath, resolve, reject));
+		fs.writeFile(messagePath, JSON.stringify(message), util.writeFileCallback("Edit message", messagePath, resolve, reject));
 	});
 };

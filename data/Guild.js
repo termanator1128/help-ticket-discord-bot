@@ -9,13 +9,18 @@ var util = require('./util.js');
  */
 module.exports.guildRoot = './data/guilds/';
 module.exports.guildInfo = 'info.json';
-module.exports.ticketRoot = 'tickets/';
 
 
 /* Extract and store relevant information about a Discord Guild
  */
 // Constructor for a Guild object
 var Guild = function(guild, guildPath) {
+	// Create a place to store tickets
+	var ticketPath = guildPath + Ticket.ticketRoot;
+	if (!fs.existsSync(ticketPath))
+		fs.mkdirSync(ticketPath);
+	
+	// Output created Guild object
 	return {
 		"id": guild["id"],
 		"name": guild["name"],
@@ -249,11 +254,11 @@ module.exports.addGuild = function(key, guild) {
 module.exports.loadGuild = function(pathToGuildFile) {
 	var data = require(path.resolve(pathToGuildFile)),
 		// Strip out the info file to get the path to this Guild
-		guildPath = pathToGuildFile.substring(pathToGuildFile.indexOf(module.exports.guildInfo));
+		guildPath = pathToGuildFile.substring(0, pathToGuildFile.indexOf(module.exports.guildInfo));
 	
 	// Rebuild ticket objects
 	data["tickets"] = data["tickets"].map(function(ticketNumber, index, ticketNumbers) {
-		return Ticket.loadTicket(guildPath + module.exports.ticketRoot + ticketNumber + '/' + Ticket.ticketFile);
+		return Ticket.loadTicket(guildPath + Ticket.ticketRoot + ticketNumber + '/' + Ticket.ticketFile);
 	});
 	
 	return Guild(data, guildPath);

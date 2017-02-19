@@ -104,13 +104,13 @@ module.exports.TicketCache = {
 		else
 			openTicket.then(function(result) {
 				module.exports.TicketCacheLogger.log('info', 'New ticket opened: ' + result);
-			}, function(err) {
+			}, function(error) {
 				module.exports.TicketCacheLogger.log('error', 'Failed to open ticket', error);
 			});
 	},
 	
 	// Respond to a ticket
-	respondTicket: function(message) {
+	respondTicket: function(botClient, message) {
 		var respondTicket = this.data[this.getKey(message.guild)].respondTicket(message)
 		
 		if (respondTicket.err)
@@ -184,8 +184,8 @@ module.exports.TicketCache = {
 	// Save all Guild information (call this when the bot shuts down)
 	dump: function() {
 		// Create root directory
-		if (!fs.existsSync(module.exports.guildRoot))
-			fs.mkdirSync(module.exports.guildRoot);
+		if (!fs.existsSync(Guild.guildRoot))
+			fs.mkdirSync(Guild.guildRoot);
 		
 		// Process all Guilds
 		Promise.all(Object.entries(this.data).map(function(guild, index, guilds) {
