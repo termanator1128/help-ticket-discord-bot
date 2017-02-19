@@ -9,6 +9,7 @@
 			"secret": "CLIENT_SECRET"
 		}
 	},
+	"about-me": "",
 	"defaults": {
 		"permissions": ["READ_MESSAGES", "SEND_MESSAGES", "SEND_TTS_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY", "MENTION_EVERYONE", "MOVE_MEMBERS", "CHANGE_NICKNAME"],
 		"channels": {
@@ -27,19 +28,42 @@
 		},
 		"commands": {
 			"settings": {
-				"~setAdmin": "Set an existing Role as an administrator for this bot",
-				"~setHelper": "Set an existing Role as a Ticket responder",
-				"~setHelpTextChannel": "Set an existing text channel as a place to resolve Tickets",
-				"~setHelpVoiceChannel": "Set an existing voice channel as a place to resolve Tickets"
+				"tic~setAdmin": {
+					"description": "Set an existing Role as an administrator for this bot"
+				},
+				"tic~setHelper": {
+					"description": "Set an existing Role as a Ticket responder"
+				},
+				"tic~setHelpTextChannel": {
+					"description": "Set an existing text channel as a place to resolve Tickets",
+					"aliases": ["tic~setHTC"]
+				},
+				"tic~setHelpVoiceChannel": {
+					"description": "Set an existing voice channel as a place to resolve Tickets",
+					"aliases": ["tic~setHVC"]
+				}
 			},
 			"information": {
-				"^help": "Print out a list of commands that this bot can handle"
+				"tic^help": {
+					"description": "Print out a list of commands that this bot can handle"
+				},
+				"tic^about": {
+					"description": "Print out a short description about this bot"
+				}
 			},
 			"help-tickets": {
-				"!open": "Open a new Ticket",
-				"!reply": "Reply to an open Ticket",
-				"!close": "Close an open Ticket"
+				"tic!open": {
+					"description": "Open a new Ticket",
+					"aliases": ["tic!o"]
+				},
+				"tic!reply": {
+					"description": "Reply to an open Ticket",
+					"aliases": ["tic!r"]
+				},
+				"tic!close": {
+					"description": "Close an open Ticket",
+					"aliases": ["tic!c"]
+				}
 			}
 		}
 	}
-}

@@ -84,22 +84,24 @@ bot.on('message', function(message) {
 	switch (command) {
 		/* Bot settings
 		 */
-		case '~setAdmin':
+		case 'tic~setAdmin':
 			// Register a role as having admin privileges (only one role may have admin privileges)
 			TicketCache.getGuild(key).setAdmin(message);
 			break;
 		
-		case '~setHelper':
+		case 'tic~setHelper':
 			// Register a role as the group that help requests will be directed towards (only one role may be a responder)
 			TicketCache.getGuild(key).setHelper(message);
 			break;
 		
-		case '~setHelpTextChannel':
+		case 'tic~setHelpTextChannel':
+		case 'tic~setHTC':
 			// Register a text channel as a "help" channel
 			TicketCache.getGuild(key).setHelpTextChannel(message);
 			break;
 		
-		case '~setHelpVoiceChannel':
+		case 'tic~setVoiceCh':
+		case 'tic~setHVC':
 			// Register a voice channel as a "help" channel
 			TicketCache.getGuild(key).setHelpVoiceChannel(message);
 			break;
@@ -107,14 +109,19 @@ bot.on('message', function(message) {
 		
 		/* Information about this bot
 		 */
-		case '^help':
+		case 'tic^help':
 			// Print a list of commands
+			break;
+		
+		case 'tic^about':
+			// Print a brief introduction
 			break;
 		
 		
 		/* Handle help tickets
 		 */
-		case '!open':
+		case 'tic!open':
+		case 'tic!o':
 			// Create a new ticket and assign it a number
 			TicketCache.openTicket(bot, message);
 			
@@ -122,13 +129,20 @@ bot.on('message', function(message) {
 			TicketCache.respondTicket(bot, message);
 			break;
 		
-		case '!reply':
+		case 'tic!reply':
+		case 'tic!r':
 			// Respond to an existing ticket by id
 			TicketCache.respondTicket(bot, message);
 			break;
 		
-		case '!close':
+		case 'tic!close':
+		case 'tic!c':
+			// Close an open ticket (only a Helper role or higher may do this)
 			TicketCache.closeTicket(bot, message);
+			break;
+		
+		default:
+			
 			break;
 	}
 });
@@ -148,3 +162,23 @@ bot.on('disconnect', function(errMsg, code) {
 
 // Connect using the token
 bot.login(Config["discord"]["bot-user"]["token"]);
+
+
+/* Process event handlers
+ */
+
+// Handles program exit
+process.on('exit', function(code) {
+	
+});
+
+// Handles Ctrl+C
+process.on('SIGINT', function() {
+	process.exit(2);
+});
+
+// Handles fatal exceptions
+process.on('uncaughtException', function(e) {
+	logger.log('error', 'Uncaught Exception', e);
+	process.exit(99);
+});
