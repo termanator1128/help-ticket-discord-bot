@@ -72,6 +72,9 @@ bot.on('ready', function(event) {
 // Bot has joined a guild
 bot.on('guildCreate', function(guild) {
 	TicketCache.insert(guild);
+	
+	// Send a greeting to #general
+	guild.defaultChannel.sendMessage(Config["greeting"]);
 });
 
 // Process commands and route them to the correct module

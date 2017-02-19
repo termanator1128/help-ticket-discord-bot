@@ -9,6 +9,7 @@
 			"secret": "CLIENT_SECRET"
 		}
 	},
+	"greeting": "Hi everyone! I'm a help ticket bot, here to connect you and your questions to someone who can answer them. If you have any questions on how to use my functions, use `tic^help`.\n\nよろしくお願いします~",
 	"about-me": "",
 	"defaults": {
 		"permissions": ["READ_MESSAGES", "SEND_MESSAGES", "SEND_TTS_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY", "MENTION_EVERYONE", "MOVE_MEMBERS", "CHANGE_NICKNAME"],
