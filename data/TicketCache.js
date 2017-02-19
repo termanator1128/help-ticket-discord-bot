@@ -37,18 +37,21 @@ module.exports.TicketCache = {
 	// Generate a new Guild from Discord.js Guild data
 	insert: function(guild) {
 		var key = this.getKey(guild);
-		this.data[key] = Guild.addGuild(key, guild);
 		
-		console.log(`inserted ${key}: ${guild.id}`);
-		
-		// Do a preliminary dump
-		this.data[key].dump().then(function(result) {
-			module.exports.TicketCacheLogger.log('info', 'Saved information for Guild: ' + result);
-			console.log(`saved ${result}`);
-		}, function(error) {
-			module.exports.TicketCacheLogger.log('error', 'Error saving Guild information', error);
-			console.log(error);
-		});
+		if (!(key in this.data)) {
+			this.data[key] = Guild.addGuild(key, guild);
+			
+			console.log(`inserted ${key}: ${guild.id}`);
+			
+			// Do a preliminary dump
+			this.data[key].dump().then(function(result) {
+				module.exports.TicketCacheLogger.log('info', 'Saved information for Guild: ' + result);
+				console.log(`saved ${result}`);
+			}, function(error) {
+				module.exports.TicketCacheLogger.log('error', 'Error saving Guild information', error);
+				console.log(error);
+			});
+		}
 	},
 	
 	// Retrieve previously populated Guild data from a file
@@ -58,13 +61,18 @@ module.exports.TicketCache = {
 	
 	// Retrieve all Guilds inside a directory
 	populateAll: function() {
-		var guilds = fs.readdirSync(Guild.guildRoot).filter(function(file, index, results) {
-				return fs.statSync(path.join(Guild.guildRoot, file)).isDirectory() && this.isKey(file);
+		// Create root directory
+		if (!fs.existsSync(Guild.guildRoot))
+			fs.mkdirSync(Guild.guildRoot);
+		else {
+			var guilds = fs.readdirSync(Guild.guildRoot).filter(function(file, index, results) {
+					return fs.statSync(path.join(Guild.guildRoot, file)).isDirectory() && this.isKey(file);
+				}, this);
+			
+			guilds.forEach(function(guild, index, guilds) {
+				this.populate(guild);
 			}, this);
-		
-		guilds.forEach(function(guild, index, guilds) {
-			this.populate(guild);
-		}, this);
+		}
 	},
 	
 	
@@ -183,10 +191,6 @@ module.exports.TicketCache = {
 	 */
 	// Save all Guild information (call this when the bot shuts down)
 	dump: function() {
-		// Create root directory
-		if (!fs.existsSync(Guild.guildRoot))
-			fs.mkdirSync(Guild.guildRoot);
-		
 		// Process all Guilds
 		Promise.all(Object.entries(this.data).map(function(guild, index, guilds) {
 			return guild[1].dump();
