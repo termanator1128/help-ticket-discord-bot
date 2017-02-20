@@ -86,7 +86,7 @@ var Guild = function(guild, guildPath) {
 		// Check if a guild member (the message sender) holds an administrative role
 		isAdmin: function(message) {
 			let admin = message.guild.roles.find('name', this["roles"]["admin"]),
-				member = message.guild.members[message.author.id];
+				member = message.guild.members.get(message.author.id);
 			return admin && member.roles[admin.id];
 		},
 		
@@ -161,7 +161,7 @@ var Guild = function(guild, guildPath) {
 			this["messages"][message.createdTimestamp] = ticket["id"];
 			
 			// Record message
-			return ticket.respond(message.author.username, message.content, message.createdTimestamp);
+			return ticket.respond(message.author, message.content, message.createdTimestamp);
 		},
 		
 		// Edit a response to a ticket

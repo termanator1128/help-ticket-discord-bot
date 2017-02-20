@@ -34,7 +34,10 @@ var Ticket = function(data, ticketPath, messagePath) {
 			this["message-count"] += 1;
 			
 			return module.exports.Message(messagePath, {
-				"author": author,
+				"author": {
+					"id": author.id,
+					"username": author.username
+				},
 				"created-on": timestamp,
 				"history": [{
 					"content": content,
@@ -108,7 +111,10 @@ module.exports.openTicket = function(number, message, guildPath) {
 	
 	return Ticket({
 		"id": number.toString(16),
-		"author": message.author.username,
+		"author": {
+			"id": message.author.id,
+			"username": message.author.username
+		},
 		"open-timestamp": message.timestamp,
 		"close-timestamp": -1,
 		"message-count": 0,

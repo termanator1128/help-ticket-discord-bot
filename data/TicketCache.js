@@ -169,7 +169,7 @@ module.exports.TicketCache = {
 				var splitPath = results[0].split("/"),
 					ticketNumber = splitPath[splitPath.length - 2];
 				
-				notify(botClient, message, `Ticket#${ticketNumber} has been closed`, results[2]);
+				notify(botClient, message, `Ticket#${ticketNumber} has been closed`, results[2]["id"]);
 			}, function(errors) {
 				if (!Array.isArray(errors))
 					module.exports.TicketCacheLogger('error', 'Failed to edit response to Ticket', error);
@@ -186,16 +186,16 @@ module.exports.TicketCache = {
 	 * 
 	 * Notify the help text channel whenever something important happens (a ticket is opened/closed)
 	 */
-	// Notify a specific user
-	notifyUser: function(botClient, message, notification, username) {
-		let user = message.guild.members.find('name', username);
+	// Notify a specific user by id
+	notifyUser: function(botClient, message, notification, id) {
+		let user = message.guild.members.get(id);
 		if (user)
 			message.channel.sendMessage(`${user} ${notification}`);
 		else
 			module.exports.TicketCacheLogger.log('error', 'Failed to notify ' + username + ': ' + notification);
 	},
 	
-	// Notify a role
+	// Notify a role by the role's name
 	notifyRole: function(botClient, message, notification, roleName) {
 		let role = message.guild.roles.find('name', roleName);
 		if (role)
