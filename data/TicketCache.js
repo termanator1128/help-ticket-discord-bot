@@ -101,17 +101,21 @@ module.exports.TicketCache = {
 	 * Tickets are specific to Guilds
 	 * 	Each Guild maintains its own counter for number of Tickets opened
 	 * 	Tickets can be made from any channel in the Guild
-	 * 		If a help ticket channel exists in the guild, the bot will log information to that channel
+	 * 		If a help ticket channel exists in the Guild, the bot will log information to that channel
 	 */
 	// Open a ticket
 	openTicket: function(botClient, message) {
-		var openTicket = this.data[this.getKey(message.guild)].openTicket(message);
+		var key = this.getKey(message.guild),
+			guild = this.data[key],
+			openTicket = guild.openTicket(message),
+			notify = this.notifyRole;
 		
 		if (openTicket.err)
 			module.exports.TicketCacheLogger('error', 'Failed to open Ticket', openTicket.err);
 		else
 			openTicket.then(function(result) {
-				module.exports.TicketCacheLogger.log('info', 'New ticket opened: ' + result);
+				module.exports.TicketCacheLogger.log('info', 'New ticket opened: ' + result["path"]);
+				notify(botClient, message, `${message.author} has opened Ticket#${result["id"]}`, guild["roles"]["helper"]);
 			}, function(error) {
 				module.exports.TicketCacheLogger.log('error', 'Failed to open ticket', error);
 			});
@@ -149,7 +153,8 @@ module.exports.TicketCache = {
 	closeTicket: function(botClient, message) {
 		var key = this.getKey(message.guild),
 			guild = this.data[key],
-			closeTicket = guild.closeTicket(message);
+			closeTicket = guild.closeTicket(message),
+			notify = this.notifyUser;
 		
 		if (closeTicket.err)
 			module.exports.TicketCacheLogger('error', 'Failed to close Ticket', closeTicket.err);
@@ -170,20 +175,20 @@ module.exports.TicketCache = {
 	 */
 	// Notify a specific user
 	notifyUser: function(botClient, message, notification, username) {
-		let user = message.server.members.get('name', username);
+		let user = message.guild.members.find('name', username);
 		if (user)
-			botClient.sendMessage(message, `${user} ${notification}`);
+			message.channel.sendMessage(`${user} ${notification}`);
 		else
 			module.exports.TicketCacheLogger.log('error', 'Failed to notify ' + username + ': ' + notification);
 	},
 	
 	// Notify a role
 	notifyRole: function(botClient, message, notification, roleName) {
-		let role = message.server.roles.get('name', roleName);
+		let role = message.guild.roles.find('name', roleName);
 		if (role)
-			botClient.sendMessage(message, `${role} ${notification}`);
+			message.channel.sendMessage(`${role} ${notification}`);
 		else
-			module.exports.TicketCacheLogger.log('error', 'Failed to notify ' + username + ': ' + notification);
+			module.exports.TicketCacheLogger.log('error', 'Failed to notify ' + roleName + ': ' + notification);
 	},
 	
 	

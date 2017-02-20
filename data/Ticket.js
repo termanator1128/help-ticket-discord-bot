@@ -74,7 +74,7 @@ var Ticket = function(data, ticketPath, messagePath) {
 				ticketFile = ticketPath + module.exports.ticketFile;
 			
 			return new Promise(function(resolve, reject) {
-				fs.writeFile(ticketFile, JSON.stringify(data), util.writeFileCallback("Write Ticket", ticketFile, resolve, reject));
+				fs.writeFile(ticketFile, JSON.stringify(data), util.writeFileCallback("Write Ticket", {"id": data["id"], "path": ticketFile}, resolve, reject));
 			});
 		}
 	}

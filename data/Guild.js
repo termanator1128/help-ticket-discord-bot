@@ -85,14 +85,14 @@ var Guild = function(guild, guildPath) {
 		 */
 		// Check if a guild member (the message sender) holds an administrative role
 		isAdmin: function(message) {
-			let admin = message.guild.roles.get('name', this["roles"]["admin"]),
+			let admin = message.guild.roles.find('name', this["roles"]["admin"]),
 				member = message.guild.members[message.author.id];
 			return admin && member.roles[admin.id];
 		},
 		
 		// Check if a role exists
 		existsRole: function(message, role) {
-			return message.guild.roles.get('name', role);
+			return message.guild.roles.find('name', role);
 		},
 		
 		// Check if a channel exists
@@ -116,10 +116,11 @@ var Guild = function(guild, guildPath) {
 		
 		// Set a new helper role
 		setHelper: function(message) {
-			let newHelper = message.content.substring(message.content.indexOf(' ') + 1);
+			let newHelper = message.content.substring(message.content.indexOf(' ') + 1),
+				helperRole = this.existsRole(message, newHelper);
 			
-			if (this.isAdmin(message) && this.existsRole(message, newHelper))
-				this["roles"]["helper"] = newHelper;
+			if (this.isAdmin(message) && helperRole)
+				this["roles"]["helper"] = helperRole.name;
 		},
 		
 		// Set a new text channel for help tickets
@@ -160,7 +161,7 @@ var Guild = function(guild, guildPath) {
 			this["messages"][message.createdTimestamp] = ticket["id"];
 			
 			// Record message
-			return ticket.respond(message.author.username, message.content, message.timestamp);
+			return ticket.respond(message.author.username, message.content, message.createdTimestamp);
 		},
 		
 		// Edit a response to a ticket
