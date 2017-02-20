@@ -14,8 +14,8 @@
 	"defaults": {
 		"permissions": ["READ_MESSAGES", "SEND_MESSAGES", "SEND_TTS_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY", "MENTION_EVERYONE", "MOVE_MEMBERS", "CHANGE_NICKNAME"],
 		"channels": {
-			"help-text": "",
-			"help-voice": ""
+			"help-text": "help-tickets",
+			"help-voice": "Help Tickets"
 		},
 		"logs": {
 			"info": {
@@ -27,44 +27,61 @@
 				"filename": "./logs/filelog-error.log"
 			}
 		},
+		"prefix": "`tic`",
+		"index": {
+			"~": "settings",
+			"^": "information",
+			"!": "help-tickets"
+		},
 		"commands": {
+			"description": "A list of available commands. Commands are expected to be prefixed with `tic` followed by an index [`~`, `^`, `!`] that determines its type.",
 			"settings": {
-				"tic~setAdmin": {
-					"description": "Set an existing Role as an administrator for this bot"
+				"setAdmin": {
+					"description": "Set an existing Role as an administrator for this bot",
+					"example-usage": "`tic~setAdmin Admin Tag`"
 				},
-				"tic~setHelper": {
-					"description": "Set an existing Role as a Ticket responder"
+				"setHelper": {
+					"description": "Set an existing Role as a Ticket responder",
+					"example-usage": "`tic~setHelper Helper Tag`"
 				},
-				"tic~setHelpTextChannel": {
+				"setHelpTextChannel": {
 					"description": "Set an existing text channel as a place to resolve Tickets",
-					"aliases": ["tic~setHTC"]
+					"example-usage": "`tic~setHelpTextChannel #text-channel`",
+					"aliases": ["setHTC"]
 				},
-				"tic~setHelpVoiceChannel": {
+				"setHelpVoiceChannel": {
 					"description": "Set an existing voice channel as a place to resolve Tickets",
-					"aliases": ["tic~setHVC"]
+					"example-usage": "`tic~setHelpVoiceChannel Voice Channel`",
+					"aliases": ["setHVC"]
 				}
 			},
 			"information": {
-				"tic^help": {
-					"description": "Print out a list of commands that this bot can handle"
+				"help": {
+					"description": "Print out a list of commands that this bot can handle",
+					"example-usage": "tic^help"
 				},
-				"tic^about": {
-					"description": "Print out a short description about this bot"
+				"about": {
+					"description": "Print out a short description about this bot",
+					"example-usage": "tic^about"
 				}
 			},
 			"help-tickets": {
-				"tic!open": {
+				"open": {
 					"description": "Open a new Ticket",
-					"aliases": ["tic!o"]
+					"example-usage": "tic!open Opening a new ticket",
+					"aliases": ["o"]
 				},
-				"tic!reply": {
+				"reply": {
 					"description": "Reply to an open Ticket",
-					"aliases": ["tic!r"]
+					"example-usage": "tic!reply 1 Replying to Ticket#1",
+					"aliases": ["r"]
 				},
-				"tic!close": {
+				"close": {
 					"description": "Close an open Ticket",
-					"aliases": ["tic!c"]
+					"example-usage": "tic!close 1 Closing Ticket#1",
+					"aliases": ["c"]
 				}
 			}
 		}
 	}
+}

@@ -84,29 +84,49 @@ bot.on('message', function(message) {
 		command = message.content.substring(0, (commandEnd > 0 ? commandEnd : message.length)),
 		key = TicketCache.getKey(message.guild);
 	
+	// Prevent the bot from messing with itself
+	if (message.author.id == bot.user.id)
+		return;
+	
 	switch (command) {
 		/* Bot settings
 		 */
 		case 'tic~setAdmin':
 			// Register a role as having admin privileges (only one role may have admin privileges)
-			TicketCache.getGuild(key).setAdmin(message);
+			if (validateCommand(message.content, "^" + command + " .+$"))
+				TicketCache.getGuild(key).setAdmin(message);
+			else
+				message.reply(incorrectUsage(command, command + " *@ValidRole*"));
+			
 			break;
 		
 		case 'tic~setHelper':
 			// Register a role as the group that help requests will be directed towards (only one role may be a responder)
-			TicketCache.getGuild(key).setHelper(message);
+			if (validateCommand(message.content, "^" + command + " .+$"))
+				TicketCache.getGuild(key).setHelper(message);
+			else
+				message.reply(incorrectUsage(command, command + " *@ValidRole*"));
+			
 			break;
 		
 		case 'tic~setHelpTextChannel':
 		case 'tic~setHTC':
 			// Register a text channel as a "help" channel
-			TicketCache.getGuild(key).setHelpTextChannel(message);
+			if (validateCommand(message.content, "^" + command + " .+$"))
+				TicketCache.getGuild(key).setHelpTextChannel(message);
+			else
+				message.reply(incorrectUsage(command, command + " *ValidTextChannel*"));
+			
 			break;
 		
 		case 'tic~setVoiceCh':
 		case 'tic~setHVC':
 			// Register a voice channel as a "help" channel
-			TicketCache.getGuild(key).setHelpVoiceChannel(message);
+			if (validateCommand(message.content, "^" + command + " .+$"))
+				TicketCache.getGuild(key).setHelpVoiceChannel(message);
+			else
+				message.reply(incorrectUsage(command, command + " *ValidVoiceChannel*"));
+			
 			break;
 		
 		
@@ -114,10 +134,16 @@ bot.on('message', function(message) {
 		 */
 		case 'tic^help':
 			// Print a list of commands
+			message.channel.sendMessage('**Command List**');
 			break;
 		
 		case 'tic^about':
 			// Print a brief introduction
+			if (validateCommand(message.content, "^" + command + "$"))
+				message.channel.sendMessage(`${Config["about-me"]}`);
+			else
+				message.reply(incorrectUsage(command, command));
+			
 			break;
 		
 		
@@ -125,26 +151,39 @@ bot.on('message', function(message) {
 		 */
 		case 'tic!open':
 		case 'tic!o':
-			// Create a new ticket and assign it a number
-			TicketCache.openTicket(bot, message);
+			if (validateCommand(message.content, "^" + command + " .+$")) {
+				// Create a new ticket and assign it a number
+				TicketCache.openTicket(bot, message);
+				
+				// Post the opening message as the initial reply
+				TicketCache.respondTicket(bot, message);
+			} else
+				message.reply(incorrectUsage(command, command + " *inquiry*"));
 			
-			// Post the opening message as the initial reply
-			TicketCache.respondTicket(bot, message);
 			break;
 		
 		case 'tic!reply':
 		case 'tic!r':
-			// Respond to an existing ticket by id
-			TicketCache.respondTicket(bot, message);
+			if (validateCommand(message.content, "^" + command + "( [0-9A-Fa-f])? .+$"))
+				// Respond to an existing ticket by id
+				TicketCache.respondTicket(bot, message);
+			else
+				message.reply(incorrectUsage(command, command + " [ticket number] *response to inquiry*"));
+			
 			break;
 		
 		case 'tic!close':
 		case 'tic!c':
-			// Close an open ticket (only a Helper role or higher may do this)
-			TicketCache.closeTicket(bot, message);
+			if (validateCommand(message.content, "^" + command + "( [0-9A-Fa-f])?( .*)?$"))
+				// Close an open ticket (only a Helper role or higher may do this)
+				TicketCache.closeTicket(bot, message);
+			else
+				message.reply(incorrectUsage(command, command + " [ticket number] [closing remarks]"));
 			break;
 		
 		default:
+			if (command.indexOf('tic') == 0)
+				message.reply(unrecognizedCommand(command));
 			
 			break;
 	}
@@ -167,9 +206,25 @@ bot.on('disconnect', function(errMsg, code) {
 bot.login(Config["discord"]["bot-user"]["token"]);
 
 
+/* Bot utilities
+ */
+// Some commands need to be validated for format
+var validateCommand = function(commandText, format) {
+	return new RegExp(format, "i").test(commandText);
+};
+
+// Output an "incorrect usage" error message
+var incorrectUsage = function(command, expected) {
+	return `Incorrect usage of \`${command}\`, where \`${expected}\` was expected... if you need help using this command, try checking out \`tic^help\`.`;
+};
+
+// Output a "command not recognized" error message
+var unrecognizedCommand = function(command) {
+	return `Hmm... I don't recognize the command \`${command}\`. To show valid commands, use \`tic^help\`.`;
+};
+
 /* Process event handlers
  */
-
 // Handles program exit
 process.on('exit', function(code) {
 	
