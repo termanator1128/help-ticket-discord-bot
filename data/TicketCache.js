@@ -114,8 +114,12 @@ module.exports.TicketCache = {
 			module.exports.TicketCacheLogger('error', 'Failed to open Ticket', openTicket.err);
 		else
 			openTicket.then(function(result) {
-				module.exports.TicketCacheLogger.log('info', 'New ticket opened: ' + result["path"]);
-				notify(botClient, message, `${message.author} has opened Ticket#${result["id"]}`, guild["roles"]["helper"]);
+				module.exports.TicketCacheLogger.log('info', 'New ticket opened: ' + result);
+				
+				var splitPath = result.split("/"),
+					ticketNumber = splitPath[splitPath.length - 2];
+				
+				notify(botClient, message, `${message.author} has opened Ticket#${ticketNumber}`, guild["roles"]["helper"]);
 			}, function(error) {
 				module.exports.TicketCacheLogger.log('error', 'Failed to open ticket', error);
 			});
@@ -161,10 +165,19 @@ module.exports.TicketCache = {
 		else
 			Promise.all(closeTicket).then(function(results) {
 				module.exports.TicketCacheLogger.log('info', 'Ticket at ' + results[0] + ' has been closed. Closing message written to ' + results[1]);
+				
+				var splitPath = results[0].split("/"),
+					ticketNumber = splitPath[splitPath.length - 2];
+				
+				notify(botClient, message, `Ticket#${ticketNumber} has been closed`, results[2]);
 			}, function(errors) {
-				errors.forEach(function(error, index, errors) {
-					this.log('error', 'Failed to close Ticket', error);
-				}, module.exports.TicketCacheLogger);
+				if (!Array.isArray(errors))
+					module.exports.TicketCacheLogger('error', 'Failed to edit response to Ticket', error);
+				else {
+					for (var i = 0; i < errors.length; i++){
+						module.exports.TicketCacheLogger.log('error', 'Failed to close Ticket', errors[i]);
+					}
+				}
 			});
 	},
 	
@@ -200,13 +213,21 @@ module.exports.TicketCache = {
 		Promise.all(Object.entries(this.data).map(function(guild, index, guilds) {
 			return guild[1].dump();
 		})).then(function(results) {
-			results.forEach(function(result, index, results) {
-				this.log('info', 'Saved information for Guild: ' + result);
-			}, module.exports.TicketCacheLogger);
+			if (!Array.isArray(results))
+				module.exports.TicketCacheLogger('info', 'Saved information for Guild: ' + result);
+			else {
+				for (var i = 0; i < results.length; i++){
+					module.exports.TicketCacheLogger.log('info', 'Saved information for Guild: ' + results[i]);
+				}
+			}
 		}, function(errors) {
-			errors.forEach(function(error, index, errors) {
-				this.log('error', 'Error saving Guild information', error);
-			}, module.exports.TicketCacheLogger);
+			if (!Array.isArray(errors))
+				module.exports.TicketCacheLogger('error', 'Error saving Guild information', errors);
+			else {
+				for (var i = 0; i < errors.length; i++){
+					module.exports.TicketCacheLogger.log('error', 'Error saving Guild information', errors[i]);
+				}
+			}
 		});
 	}
 };

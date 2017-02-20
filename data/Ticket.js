@@ -22,6 +22,7 @@ module.exports.messageRoot = 'messages/';
 var Ticket = function(data, ticketPath, messagePath) {
 	return {
 		"id": data["id"],
+		"author": data["author"],
 		"open-timestamp": data["open-timestamp"],
 		"close-timestamp": data["close-timestamp"],
 		"message-count": data["message-count"],
@@ -33,7 +34,7 @@ var Ticket = function(data, ticketPath, messagePath) {
 			this["message-count"] += 1;
 			
 			return module.exports.Message(messagePath, {
-				"created-by": author,
+				"author": author,
 				"created-on": timestamp,
 				"history": [{
 					"content": content,
@@ -51,11 +52,22 @@ var Ticket = function(data, ticketPath, messagePath) {
 		},
 		
 		// Close this ticket
-		close: function(content, timestamp) {
+		close: function(author, content, timestamp) {
+			var creator = this["author"];
+			
 			// Mark ticket as closed
 			this["close-timestamp"] = timestamp;
 			
-			return [this.dump(), this.reply(content, timestamp)];
+			return [
+				this.dump(),
+				this.respond(author, content, timestamp),
+				new Promise(function(resolve, reject) {
+					if (!creator)
+						reject("Unknown author");
+					
+					resolve(creator);
+				})
+			];
 		},
 		
 		
@@ -66,6 +78,7 @@ var Ticket = function(data, ticketPath, messagePath) {
 			// Pack data
 			var data = {
 					"id": this["id"],
+					"author": this["author"],
 					"open-timestamp": this["open-timestamp"],
 					"close-timestamp": this["close-timestamp"],
 					"message-count": this["message-count"]
@@ -74,7 +87,7 @@ var Ticket = function(data, ticketPath, messagePath) {
 				ticketFile = ticketPath + module.exports.ticketFile;
 			
 			return new Promise(function(resolve, reject) {
-				fs.writeFile(ticketFile, JSON.stringify(data), util.writeFileCallback("Write Ticket", {"id": data["id"], "path": ticketFile}, resolve, reject));
+				fs.writeFile(ticketFile, JSON.stringify(data), util.writeFileCallback("Ticket.dump()", ticketPath, resolve, reject));
 			});
 		}
 	}
@@ -95,6 +108,7 @@ module.exports.openTicket = function(number, message, guildPath) {
 	
 	return Ticket({
 		"id": number.toString(16),
+		"author": message.author.username,
 		"open-timestamp": message.timestamp,
 		"close-timestamp": -1,
 		"message-count": 0,

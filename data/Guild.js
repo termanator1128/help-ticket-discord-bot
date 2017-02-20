@@ -67,7 +67,7 @@ var Guild = function(guild, guildPath) {
 			// See if there is a second word of valid length
 			var secondWordEnd = message.content.indexOf(' ', secondWordStart);
 			if (secondWordEnd <= secondWordStart)
-				return this["tickets"][0];
+				secondWordEnd = message.content.length;
 			
 			// If a valid (hexadecimal) Ticket number is given, use it to look up the Ticket
 			var ticketNumber = message.content.substring(secondWordStart, secondWordEnd);
@@ -191,7 +191,7 @@ var Guild = function(guild, guildPath) {
 			// Dequeue and close the ticket
 			this["tickets"].splice(this.ticketFilter[ticket["id"]], 1);
 			delete this.ticketFilter[ticket["id"]];
-			return ticket.close(message.content, message.timestamp);
+			return ticket.close(message.author.username, message.content, message.createdTimestamp);
 		},
 		
 		
