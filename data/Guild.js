@@ -203,6 +203,10 @@ var Guild = function(guild, guildPath) {
 			var tickets = this["tickets"].map(function(ticket, index, tickets) {
 					return ticket["id"];
 				}),
+				// Dump tickets as well as data
+				dmp = this["tickets"].map(function(ticket, index, tickets) {
+					return ticket.dump();
+				}),
 				data = JSON.stringify({
 					"id": this["id"],
 					"name": this["name"],
@@ -218,10 +222,12 @@ var Guild = function(guild, guildPath) {
 			if (!fs.existsSync(guildPath))
 				fs.mkdirSync(guildPath);
 			
-			// Create a Promise that will be used externally
-			return new Promise(function(resolve, reject) {
+			// Create a Promise that will be used externally and add it to the list of Promises
+			dmp.push(new Promise(function(resolve, reject) {
 				fs.writeFile(file, data, util.writeFileCallback("Guild.dump()", guildPath, resolve, reject));
-			});
+			}));
+			
+			return dmp;
 		}
 	};
 };

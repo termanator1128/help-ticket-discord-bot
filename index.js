@@ -223,20 +223,30 @@ var unrecognizedCommand = function(command) {
 	return `Hmm... I don't recognize the command \`${command}\`. To show valid commands, use \`tic^help\`.`;
 };
 
+
 /* Process event handlers
  */
 // Handles program exit
 process.on('exit', function(code) {
-	
+	logger.log('info', `Process ended with exit code ${code}`);
 });
 
 // Handles Ctrl+C
 process.on('SIGINT', function() {
-	process.exit(2);
+	TicketCache.dump(function() {
+		process.exit(2);
+	}, function(errors) {
+		process.exit(-1);
+	});
 });
 
 // Handles fatal exceptions
 process.on('uncaughtException', function(e) {
 	logger.log('error', 'Uncaught Exception', e);
-	process.exit(99);
+	
+	TicketCache.dump(function() {
+		process.exit(99);
+	}, function() {
+		process.exit(-1);
+	});
 });

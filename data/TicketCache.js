@@ -44,7 +44,7 @@ module.exports.TicketCache = {
 			console.log(`inserted ${key}: ${guild.id}`);
 			
 			// Do a preliminary dump
-			this.data[key].dump().then(function(result) {
+			Promise.all(this.data[key].dump()).then(function(result) {
 				module.exports.TicketCacheLogger.log('info', 'Saved information for Guild: ' + result);
 				console.log(`saved ${result}`);
 			}, function(error) {
@@ -208,26 +208,41 @@ module.exports.TicketCache = {
 	/* Cleaning up
 	 */
 	// Save all Guild information (call this when the bot shuts down)
-	dump: function() {
+	dump: function(successCallback, errorCallback) {
+		// Extract guilds
+		var guilds = [];
+		for (var key in this.data) {
+			if (this.data.hasOwnProperty(key))
+				guilds.push(this.data[key]);
+		}
+		
 		// Process all Guilds
-		Promise.all(Object.entries(this.data).map(function(guild, index, guilds) {
-			return guild[1].dump();
-		})).then(function(results) {
+		Promise.all(guilds.reduce(function(promises, guild, index) {
+			return [...promises, ...guild.dump()];
+		}, [])).then(function(results) {
 			if (!Array.isArray(results))
-				module.exports.TicketCacheLogger('info', 'Saved information for Guild: ' + result);
+				module.exports.TicketCacheLogger.log('info', 'Saved information for Guild: ' + result);
 			else {
 				for (var i = 0; i < results.length; i++){
 					module.exports.TicketCacheLogger.log('info', 'Saved information for Guild: ' + results[i]);
 				}
 			}
+			
+			// Callback on success
+			if (successCallback)
+				successCallback();
 		}, function(errors) {
 			if (!Array.isArray(errors))
-				module.exports.TicketCacheLogger('error', 'Error saving Guild information', errors);
+				module.exports.TicketCacheLogger.log('error', 'Error saving Guild information', errors);
 			else {
 				for (var i = 0; i < errors.length; i++){
 					module.exports.TicketCacheLogger.log('error', 'Error saving Guild information', errors[i]);
 				}
 			}
+			
+			// Callback on error
+			if (errorCallback)
+				errorCallback();
 		});
 	}
 };
