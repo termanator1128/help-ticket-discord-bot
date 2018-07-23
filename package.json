@@ -1,11 +1,11 @@
 {
-    "engines": {
-    "node": "8.11.3"
-  }
   "name": "help-ticket-discord-bot",
   "version": "1.0.0",
   "description": "Submit, close, and reply to users' pleas for help",
   "main": "index.js",
+  "engines": {
+    "node": "8.9.4"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
