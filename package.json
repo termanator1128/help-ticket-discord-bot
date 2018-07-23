@@ -12,14 +12,14 @@
   "author": "Lysander",
   "license": "ISC",
   "dependencies": {
-    "bufferutil": "^2.0.0",
-    "discord.js": "^11.0.0",
+    "bufferutil": "^3.0.3",
+    "discord.js": "^11.3.2",
     "erlpack": "github:hammerandchisel/erlpack",
     "express": "^4.14.1",
-    "node-opus": "^0.2.4",
-    "opusscript": "0.0.2",
+    "node-opus": "^0.2.7",
+    "opusscript": "0.0.6",
     "socket.io": "^1.7.2",
-    "uws": "^0.12.0",
+    "uws": "^9.14.0",
     "winston": "^2.3.1"
   }
 }
