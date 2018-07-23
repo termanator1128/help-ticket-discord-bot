@@ -7,7 +7,7 @@
     "node": "8.9.4"
   },
   "scripts": {
-    "start": "forever node index.js"
+    "start": "node index.js"
   },
   "author": "Lysander",
   "license": "ISC",
